@@ -29,7 +29,7 @@ function pointInPolyhedron3D(
 		FV::Lar.Cells
 	)::Int64
 
-	# Faces triangulation (if needed)
+	# Faces triangulation is performed (if needed)
 	if max([length(σ) for σ in FV]...) > 3
 		cop_EV = Lar.coboundary_0(EV::Lar.Cells);
 		cop_EW = convert(Lar.ChainOp, cop_EV);
@@ -99,12 +99,12 @@ end
 """
     simplexSolidAngle(v::Int64, σ::Lar.Points)::Float64
 Evaluate the Solid Angle for the `v`-th vertex of the simplex `σ`.
-`σ` must be a simplex, therefore if `dim` is the dimension, then `σ` must be
-made of `dim+1` vertices (non collinear).
+`σ` must be a simplex, therefore, since the dimension is three, then `σ` must be
+made of four vertices (non collinear).
 """
 function simplexSolidAngle(v::Int64, σ::Lar.Points)::Float64
-    dim, n = size(σ);
-    @assert n == dim + 1 "ERROR: σ do not define a simplex."
+    @assert size(σ) == (3, 4)
+		"ERROR: the simplex σ must be made of four 3D points.";
     p = σ[:, v];
     Σ = σ[:, setdiff(1:n, v)]
     simplexSolidAngle(p, Σ);
@@ -113,16 +113,46 @@ end
 """
     simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
 Evaluate the Solid Angle of `p` with respect to `Σ`.
-`Σ ∪ p` must be a simplex, therefore if `dim` is the dimension, then `Σ` must be
-made of `dim` vertices (non collinear).
+`Σ ∪ p` must be a simplex, therefore, since 3 is the dimension, then `Σ` must be
+made of `3` vertices (non collinear).
 
 #ToDo check collinearity
-#ToDo implement Lar.Cross for dimensions different from 3.
 """
 function simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
-    dim, n = size(Σ);
-    @assert n == dim "ERROR: σ do not define a simplex."
-    @assert length(p) == dim "ERROR: p has a different dimension than Σ."
+    @assert size(Σ) == (3, 3) "ERROR: Σ must be made of three 3D points."
+    @assert length(p) == 3 "ERROR: p must be a 3D point."
+
+	# If two base vertices are equilocated then the solid angle is null.
+	if |([Σ[:, i] == Σ[:, j] for i = 1:3 for j=i+1:3]...)
+		return 0.;
+	end
+
+	# If `p` is equilocated with a Σ point then the solid angle is not defined.
+	if |([p == Σ[:, i] for i = 1 : 3]...)
+		println("The solid angle for $p with respect to $Σ is not defined.");
+		return NaN;
+	end
+
+	# If `p` is coplanar with the base point then the angle is
+	#  - 0 if `p` is not in the triangle defined by `Σ`
+	#  - 2π otherwise
+#	if areCoplanar(p, Σ[:, 1], Σ[:, 2], Σ[:, 3])
+#		print("$p is coplanar with $Σ ");
+#		if isInsideTriangle(p, Σ)
+#			println("and it is inside of it.");
+#			return 2π;
+#		else
+#			println("but it is outside of it.");
+#			return 0.;
+#		end
+#	end
+
+	# If `p` is collinear with two base point then the solid angle is null
+#	if |([areCollinear(p, Σ[:, i], Σ[:, j]) for i = 1 : 3 for j = i+1 : 3]...)
+#		println("$p is collinar with two points of $Σ.");
+#		return 0;
+#	end
+
 	# Evaluate vectors from p to Σ vertices
     A = Σ[:, 1] .- p;
     B = Σ[:, 2] .- p;
@@ -133,40 +163,6 @@ function simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
 	c = Lar.norm(C);
 	tan05Ω = Lar.dot(A, Lar.cross(B, C))/(
 		a*b*c + Lar.dot(A, B)*c + Lar.dot(B, C)*a + Lar.dot(C, A)*b
-	)
+	);
     return abs(2 * atan(tan05Ω));
 end
-
-#==
-function simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
-    dim, n = size(Σ);
-    @assert n == dim "ERROR: σ do not define a simplex."
-    @assert length(p) == dim "ERROR: p has a different dimension than Σ."
-    # Evaluate vectors from p to Σ vertices
-    #  pa = Σ[:, 1] .- p;
-    #  pb = Σ[:, 2] .- p;
-    #  pc = Σ[:, 3] .- p;
-    Σvec = Σ .- p;
-    # Evaluate faces normal
-    #  ηab = Lar.cross(pa, pb);
-    #  ηbc = Lar.cross(pb, pc);
-    #  ηca = Lar.cross(pc, pa);
-    # do note that i%3+1 maps 1 ↦ 2, 2 ↦ 3, ..., n-1 ↦ n, n ↦ 1.
-    η = [Lar.cross(Σvec[:, i], Σvec[:, i%dim+1]) for i = 1 : dim];
-    # Evaluate angles between normals
-    #  θa = acos(Lar.dot(ηca, ηab)/(Lar.norm(ηca)*Lar.norm(ηab)));
-    #  θb = acos(Lar.dot(ηab, ηbc)/(Lar.norm(ηab)*Lar.norm(ηbc)));
-    #  θc = acos(Lar.dot(ηbc, ηca)/(Lar.norm(ηbc)*Lar.norm(ηca)));
-    # do note that (i+1)%n+1 maps 1 ↦ n, 2 ↦ 1, ..., n ↦ n-1.
-	cosθ = [
-        Lar.dot(η[(i+1)%dim+1], η[i])/
-        (Lar.norm(η[(i+1)%dim+1])*Lar.norm(η[i]))
-        for i = 1 : dim
-    ];
-	θ = acos.(cosθ);
-	@show η cosθ θ
-    # Return the solid angle
-    #  return θa + θb + θc - π;
-    return sum(θ) - π;
-end
-==#

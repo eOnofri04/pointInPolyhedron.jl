@@ -1,10 +1,17 @@
-using Test
+using Test;
+include("../src/pointInPolyhedron.jl");
+
 
 @testset "Determine Simplex Solid Angle" begin
     p = [0.0; 0.0; 0.0];
     x = [1.0; 0.0; 0.0];
     y = [0.0; 1.0; 0.0];
     z = [0.0; 0.0; 1.0];
+
+    @testset "Quadrants" begin
+        @test isapprox(simplexSolidAngle(p, [+x -x +z])/π, 1.0);
+        @test isapprox(simplexSolidAngle(p, [+x -x+y*1e-10 +z])/π, 1.0);
+    end
 
     @testset "Octants" begin
 
@@ -71,6 +78,17 @@ using Test
             @test isapprox(simplexSolidAngle(p, [+x -z -z+y])/π, 0.25);
             @test isapprox(simplexSolidAngle(p, [+x -z+y +y])/π, 0.25);
         end
+    end
+
+    @testset "Other Angles" begin
+        @test isapprox(simplexSolidAngle(p, [+x +y-x +z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [+x +y-x -z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [+x -y-x +z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [+x -y-x -z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [-x +y+x +z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [-x +y+x -z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [-x -y+x +z])/π, 0.75)
+        @test isapprox(simplexSolidAngle(p, [-x -y+x -z])/π, 0.75)
     end
 end
 
