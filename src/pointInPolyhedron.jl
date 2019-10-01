@@ -191,13 +191,16 @@ end
 	pointInPolyhedron2D(
 		p::Array{Float64,1},
 		V::Lar.Points,
-		EV::Lar.Cells
+		EV::Lar.Cells,
+		CHECKS = true
 	)::Int64
 Evaluate if `p` belongs to the 2D complex defined by `[V, EV]`.
 
 This method computes if a given point `p` is inner, outer or edger with respect
 to the complex defined by the sets `V, EV`. Respectivelly it return
 the integer value `+1`, `-1` or `0`.
+The optional argument `CHECK` could be set to false in order to avoid checks
+over the data structures.
 
 _Note._ If something weired happens then `-3` is returned and the value for the
 inner angle related to `p` is shown.
@@ -223,8 +226,7 @@ function pointInPolyhedron2D(
 	Vvec = V .- p;
 
 	for e in EV
-		α = rot2Dangle(Vvec[:, e[1]], Vvec[:, e[2]]);
-		@show α
+		α = rot2Dangle(Vvec[:, e[1]], Vvec[:, e[2]]) / π;
 		if α < 1
 			ω = ω + α;
 		elseif α > 1
@@ -234,26 +236,79 @@ function pointInPolyhedron2D(
 		end
 	end
 
-	if     isapprox(ω, 2.0; atol=1e-1) return +1;
-	elseif isapprox(ω, 0.0; atol=1e-1) return -1; end
-	@show ω;
+	if     isapprox(ω, 2.; atol=1e-1) return +1;
+	elseif isapprox(ω, 0.; atol=1e-1) return -1; end
+	@show "Evaluated angle of $(ω * 180) degrees.";
 	return -3;
 end
 
 """
-	rot2Dangle(x::Array{Float64,1}, y::Array{Float64,1})::Float64
-Evaluates the anticlockwise rotation angle between the two points `x` and `y`.
+	rot2Dangle(
+		x::Array{Float64,1}, y::Array{Float64,1}
+		degree = false
+	)::Float64
+Evaluates radiant anticlockwise rotation angle between two points `x` and `y`.
+
+This method evaluates the angle between `x` and `y` with respect to the origin.
+The angle is computed in anticlockwise order and it is outputted either
+in radiants (by default) or in degree (if specified via optional argument).
+
+# Examples
+```juliadoctest
+julia> rot2Dangle([1.; -1.], [1., 1]) / π
+1.0
+
+julia> rot2Dangle([1.; -1.], [1., 1], degree = true)
+90.0
+
+julia> rot2Dangle([1.; 1.], [1., -1])/π
+1.5
+
+julia> rot2Dangle([1.; 1.], [1., -1], degree = true)
+270.0
+```
+
 """
-function rot2Dangle(x::Array{Float64,1}, y::Array{Float64,1})::Float64
-	return (rot2Dangle(y) - rot2Dangle(x) + 2) % 2;
+function rot2Dangle(
+		x::Array{Float64,1}, y::Array{Float64,1};
+		degree = false
+	)::Float64
+
+	Δθ = rot2Dangle(y, degree = degree) - rot2Dangle(x, degree = degree);
+	if degree
+		return (Δθ + 360) % 360;
+	end
+	return (Δθ + 2 * π) % (2 * π);
 end
 
 """
-	rot2Dangle(x::Array{Float64,1})::Float64
-Evaluates the anticlockwise rotation angle of `x` by the positive `x`-axis.
+	rot2Dangle(x::Array{Float64,1}; degree = false)::Float64
+Evaluates radiant anticlockwise rotation angle of `x` by the positive `x`-axis.
+
+This method evaluates the angle between the positive `x`-axis and the point `x`
+with respect to the origin.
+The angle is computed in anticlockwise order and it is outputted either
+in radiants (by default) or in degree (if specified via optional argument).
+
+# Examples
+```juliadoctest
+julia> rot2Dangle([1.; 0.]) / π
+0.0
+
+julia> rot2Dangle([1.; -1]) / π
+1.75
+
+julia> rot2Dangle([1.; -1.], degree = true)
+315.0
+```
 """
-function rot2Dangle(x::Array{Float64,1})::Float64
-	abs_α = acos(Lar.dot(x, [1.;0.])/(Lar.norm(x) * Lar.norm([1.;0.]))) / π;
+function rot2Dangle(x::Array{Float64,1}; degree = false)::Float64
+
+	abs_α = acos(Lar.dot(x, [1.;0.])/(Lar.norm(x) * Lar.norm([1.;0.])));
 	is_negative = x[2]<0;
-	return (-1)^is_negative * abs_α + is_negative * 2;
+	α = (-1)^is_negative * abs_α + is_negative * 2 * π;
+	if degree
+		return α / π * 180;
+	end
+	return α;
 end

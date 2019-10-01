@@ -165,52 +165,52 @@ end
 
 @testset "Determine Planar Angles" begin
     @testset "2D Single Angle" begin
-        @test isapprox(rot2Dangle([+1.0;  0.0]), 0.00);
-        @test isapprox(rot2Dangle([+1.0; +1.0]), 0.25);
-        @test isapprox(rot2Dangle([ 0.0; +1.0]), 0.50);
-        @test isapprox(rot2Dangle([-1.0; +1.0]), 0.75);
-        @test isapprox(rot2Dangle([-1.0;  0.0]), 1.00);
-        @test isapprox(rot2Dangle([-1.0; -1.0]), 1.25);
-        @test isapprox(rot2Dangle([ 0.0; -1.0]), 1.50);
-        @test isapprox(rot2Dangle([+1.0; -1.0]), 1.75);
+        @test isapprox(rot2Dangle([+1.0;  0.0]), 0.00 * π);
+        @test isapprox(rot2Dangle([+1.0; +1.0]), 0.25 * π);
+        @test isapprox(rot2Dangle([ 0.0; +1.0]), 0.50 * π);
+        @test isapprox(rot2Dangle([-1.0; +1.0]), 0.75 * π);
+        @test isapprox(rot2Dangle([-1.0;  0.0]), 1.00 * π);
+        @test isapprox(rot2Dangle([-1.0; -1.0]), 1.25 * π);
+        @test isapprox(rot2Dangle([ 0.0; -1.0]), 1.50 * π);
+        @test isapprox(rot2Dangle([+1.0; -1.0]), 1.75 * π);
     end
 
     @testset "2D Angle" begin
-        @test isapprox(rot2Dangle([1.;0.], [+1.; 0.]), 0.00);
-        @test isapprox(rot2Dangle([1.;0.], [+1.;+1.]), 0.25);
-        @test isapprox(rot2Dangle([1.;0.], [ 0.;+1.]), 0.50);
-        @test isapprox(rot2Dangle([1.;0.], [-1.;+1.]), 0.75);
-        @test isapprox(rot2Dangle([1.;0.], [-1.;+0.]), 1.00);
-        @test isapprox(rot2Dangle([1.;0.], [-1.;-1.]), 1.25);
-        @test isapprox(rot2Dangle([1.;0.], [ 0.;-1.]), 1.50);
-        @test isapprox(rot2Dangle([1.;0.], [+1.;-1.]), 1.75);
+        @test isapprox(rot2Dangle([1.;0.], [+1.; 0.]), 0.00 * π);
+        @test isapprox(rot2Dangle([1.;0.], [+1.;+1.]), 0.25 * π);
+        @test isapprox(rot2Dangle([1.;0.], [ 0.;+1.]), 0.50 * π);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;+1.]), 0.75 * π);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;+0.]), 1.00 * π);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;-1.]), 1.25 * π);
+        @test isapprox(rot2Dangle([1.;0.], [ 0.;-1.]), 1.50 * π);
+        @test isapprox(rot2Dangle([1.;0.], [+1.;-1.]), 1.75 * π);
 
-        @test isapprox(rot2Dangle([1.;1.], [+1.; 1.]), 0.00);
-        @test isapprox(rot2Dangle([1.;1.], [ 0.;+1.]), 0.25);
-        @test isapprox(rot2Dangle([1.;1.], [-1.;+1.]), 0.50);
-        @test isapprox(rot2Dangle([1.;1.], [-1.; 0.]), 0.75);
-        @test isapprox(rot2Dangle([1.;1.], [-1.;-1.]), 1.00);
-        @test isapprox(rot2Dangle([1.;1.], [ 0.;-1.]), 1.25);
-        @test isapprox(rot2Dangle([1.;1.], [+1.;-1.]), 1.50);
-        @test isapprox(rot2Dangle([1.;1.], [+1.; 0.]), 1.75);
+        @test isapprox(rot2Dangle([1.;1.], [+1.; 1.]), 0.00 * π);
+        @test isapprox(rot2Dangle([1.;1.], [ 0.;+1.]), 0.25 * π);
+        @test isapprox(rot2Dangle([1.;1.], [-1.;+1.]), 0.50 * π);
+        @test isapprox(rot2Dangle([1.;1.], [-1.; 0.]), 0.75 * π);
+        @test isapprox(rot2Dangle([1.;1.], [-1.;-1.]), 1.00 * π);
+        @test isapprox(rot2Dangle([1.;1.], [ 0.;-1.]), 1.25 * π);
+        @test isapprox(rot2Dangle([1.;1.], [+1.;-1.]), 1.50 * π);
+        @test isapprox(rot2Dangle([1.;1.], [+1.; 0.]), 1.75 * π);
 
-        @test isapprox(rot2Dangle([+1.;-1.], [+1.;-1.]), 0.00);
-        @test isapprox(rot2Dangle([+1.;-1.], [+1.; 0.]), 0.25);
-        @test isapprox(rot2Dangle([+1.;-1.], [+1.;+1.]), 0.50);
-        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;+1.]), 0.75);
-        @test isapprox(rot2Dangle([+1.;-1.], [-1.;+1.]), 1.00);
-        @test isapprox(rot2Dangle([+1.;-1.], [-1.; 0.]), 1.25);
-        @test isapprox(rot2Dangle([+1.;-1.], [-1.;-1.]), 1.50);
-        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;-1.]), 1.75);
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.;-1.]), 0.00 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.; 0.]), 0.25 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.;+1.]), 0.50 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;+1.]), 0.75 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.;+1.]), 1.00 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.; 0.]), 1.25 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.;-1.]), 1.50 * π);
+        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;-1.]), 1.75 * π);
 
-        @test isapprox(rot2Dangle([-1.;+0.], [-1.; 0.]), 0.00);
-        @test isapprox(rot2Dangle([-1.;+0.], [-1.;-1.]), 0.25);
-        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;-1.]), 0.50);
-        @test isapprox(rot2Dangle([-1.;+0.], [+1.;-1.]), 0.75);
-        @test isapprox(rot2Dangle([-1.;+0.], [+1.; 0.]), 1.00);
-        @test isapprox(rot2Dangle([-1.;+0.], [+1.;+1.]), 1.25);
-        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;+1.]), 1.50);
-        @test isapprox(rot2Dangle([-1.;+0.], [-1.;+1.]), 1.75);
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.; 0.]), 0.00 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.;-1.]), 0.25 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;-1.]), 0.50 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.;-1.]), 0.75 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.; 0.]), 1.00 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.;+1.]), 1.25 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;+1.]), 1.50 * π);
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.;+1.]), 1.75 * π);
     end
 end
 
