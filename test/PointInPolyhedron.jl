@@ -2,6 +2,33 @@ using Test;
 include("../src/pointInPolyhedron.jl");
 
 
+@testset "Other Geometric Stuff" begin
+    @testset "areCoplanar" begin
+        x = [1.0; 0.0; 0.0];
+        y = [0.0; 1.0; 0.0];
+        z = [0.0; 0.0; 1.0];
+
+        @test areCoplanar(x, x, y, z) == true;
+        @test areCoplanar(x, y, y, z) == true;
+        @test areCoplanar(x, y, z, z) == true;
+        @test areCoplanar(x, 2*x, y, 2*y) == true;
+        @test areCoplanar(x, 2*x, 3*x, y) == true;
+        @test areCoplanar(x, 2*x, y, x+y) == true;
+        @test areCoplanar(x, x+y, y, 2*x+3*y) == true;
+        @test areCoplanar(x, z, x+z, 2*x-z) == true;
+
+        @test areCoplanar(x, y, z, x+2*y) == false;
+        @test areCoplanar(x, y, z, x-x) == false;
+        @test areCoplanar(x, y, x+y, z) == false;
+        @test areCoplanar(x, y, x+y, z*10e-7) == false;
+        @test areCoplanar(x, y, x-y, z*10e-8) == false;
+        @test areCoplanar(x, y, z, (1-10e-8)*z) == false;
+        @test areCoplanar(x, y, 2*x, x-z) == false;
+        @test areCoplanar(x, 2*x, 2*y, z) == false;
+    end
+end
+
+
 @testset "Determine Simplex Solid Angle" begin
     p = [0.0; 0.0; 0.0];
     x = [1.0; 0.0; 0.0];
@@ -134,4 +161,79 @@ end
         @test pointInPolyhedron3D([0.0; 0.0; 0.0], V, EV, triFV) == 0;
         @test pointInPolyhedron3D([1.0; 0.5; 0.5], V, EV, triFV) == 0;
     end
+end
+
+@testset "Determine Planar Angles" begin
+    @testset "2D Single Angle" begin
+        @test isapprox(rot2Dangle([+1.0;  0.0]), 0.00);
+        @test isapprox(rot2Dangle([+1.0; +1.0]), 0.25);
+        @test isapprox(rot2Dangle([ 0.0; +1.0]), 0.50);
+        @test isapprox(rot2Dangle([-1.0; +1.0]), 0.75);
+        @test isapprox(rot2Dangle([-1.0;  0.0]), 1.00);
+        @test isapprox(rot2Dangle([-1.0; -1.0]), 1.25);
+        @test isapprox(rot2Dangle([ 0.0; -1.0]), 1.50);
+        @test isapprox(rot2Dangle([+1.0; -1.0]), 1.75);
+    end
+
+    @testset "2D Angle" begin
+        @test isapprox(rot2Dangle([1.;0.], [+1.; 0.]), 0.00);
+        @test isapprox(rot2Dangle([1.;0.], [+1.;+1.]), 0.25);
+        @test isapprox(rot2Dangle([1.;0.], [ 0.;+1.]), 0.50);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;+1.]), 0.75);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;+0.]), 1.00);
+        @test isapprox(rot2Dangle([1.;0.], [-1.;-1.]), 1.25);
+        @test isapprox(rot2Dangle([1.;0.], [ 0.;-1.]), 1.50);
+        @test isapprox(rot2Dangle([1.;0.], [+1.;-1.]), 1.75);
+
+        @test isapprox(rot2Dangle([1.;1.], [+1.; 1.]), 0.00);
+        @test isapprox(rot2Dangle([1.;1.], [ 0.;+1.]), 0.25);
+        @test isapprox(rot2Dangle([1.;1.], [-1.;+1.]), 0.50);
+        @test isapprox(rot2Dangle([1.;1.], [-1.; 0.]), 0.75);
+        @test isapprox(rot2Dangle([1.;1.], [-1.;-1.]), 1.00);
+        @test isapprox(rot2Dangle([1.;1.], [ 0.;-1.]), 1.25);
+        @test isapprox(rot2Dangle([1.;1.], [+1.;-1.]), 1.50);
+        @test isapprox(rot2Dangle([1.;1.], [+1.; 0.]), 1.75);
+
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.;-1.]), 0.00);
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.; 0.]), 0.25);
+        @test isapprox(rot2Dangle([+1.;-1.], [+1.;+1.]), 0.50);
+        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;+1.]), 0.75);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.;+1.]), 1.00);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.; 0.]), 1.25);
+        @test isapprox(rot2Dangle([+1.;-1.], [-1.;-1.]), 1.50);
+        @test isapprox(rot2Dangle([+1.;-1.], [ 0.;-1.]), 1.75);
+
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.; 0.]), 0.00);
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.;-1.]), 0.25);
+        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;-1.]), 0.50);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.;-1.]), 0.75);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.; 0.]), 1.00);
+        @test isapprox(rot2Dangle([-1.;+0.], [+1.;+1.]), 1.25);
+        @test isapprox(rot2Dangle([-1.;+0.], [ 0.;+1.]), 1.50);
+        @test isapprox(rot2Dangle([-1.;+0.], [-1.;+1.]), 1.75);
+    end
+end
+
+@testset "Point in a Square" begin
+    V = [
+        0.0 1.0 1.0 0.0;
+        0.0 0.0 1.0 1.0
+    ];
+    EV = [ [1, 2], [2, 3], [3, 4], [4, 1] ];
+
+    @test pointInPolyhedron2D([0.5;  0.5], V, EV) == +1;
+    @test pointInPolyhedron2D([0.1;  0.1], V, EV) == +1;
+    @test pointInPolyhedron2D([0.1;  0.9], V, EV) == +1;
+    @test pointInPolyhedron2D([0.5; 1e-8], V, EV) == +1;
+
+    @test pointInPolyhedron2D([0.5;  1.5], V, EV) == -1;
+    @test pointInPolyhedron2D([1.0;  1.5], V, EV) == -1;
+    @test pointInPolyhedron2D([0.5;-1e-7], V, EV) == -1;
+    @test pointInPolyhedron2D([1.5;  0.5], V, EV) == -1;
+
+    @test pointInPolyhedron2D([1.0;  0.5], V, EV) ==  0;
+    @test pointInPolyhedron2D([1.0;  1.0], V, EV) ==  0;
+    @test pointInPolyhedron2D([0.5; 1e-9], V, EV) ==  0;
+    @test pointInPolyhedron2D([0.5;-1e-9], V, EV) ==  0;
+
 end

@@ -5,6 +5,7 @@ using SparseArrays;
 using LinearAlgebraicRepresentation, ViewerGL;
 Lar = LinearAlgebraicRepresentation;
 GL =  ViewerGL;
+using AlphaStructures;
 
 """
 	pointInPolyhedron3D(
@@ -54,7 +55,7 @@ function pointInPolyhedron3D(
 			# ... If for some face ...
 			face_ref = ∪(face_complex...);
 			for Σ in face_complex
-				position = pointInPolyhedron2D(V[:, Σ])
+				position = pointInPolyhedron2D(p, V[:, Σ])
 				# ... the point is inner with respect to that face
 				#     than it is inner to the polyhedron;
 				if position == 1
@@ -136,16 +137,17 @@ function simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
 	# If `p` is coplanar with the base point then the angle is
 	#  - 0 if `p` is not in the triangle defined by `Σ`
 	#  - 2π otherwise
-#	if areCoplanar(p, Σ[:, 1], Σ[:, 2], Σ[:, 3])
-#		print("$p is coplanar with $Σ ");
-#		if isInsideTriangle(p, Σ)
-#			println("and it is inside of it.");
-#			return 2π;
-#		else
-#			println("but it is outside of it.");
-#			return 0.;
-#		end
-#	end
+	if areCoplanar(p, Σ[:, 1], Σ[:, 2], Σ[:, 3])
+		print("$p is coplanar with $Σ ");
+		points = projectTo2D([Σ p], Σ);
+		if pointInPolyhedron2D(points[:, 1], points[:, [2 3 4]], [[1 2], [2 3], [3 1]]);
+			println("and it is inside of it.");
+			return 2π;
+		else
+			println("but it is outside of it.");
+			return 0.;
+		end
+	end
 
 	# If `p` is collinear with two base point then the solid angle is null
 #	if |([areCollinear(p, Σ[:, i], Σ[:, j]) for i = 1 : 3 for j = i+1 : 3]...)
@@ -165,4 +167,93 @@ function simplexSolidAngle(p::Array{Float64,1}, Σ::Lar.Points)::Float64
 		a*b*c + Lar.dot(A, B)*c + Lar.dot(B, C)*a + Lar.dot(C, A)*b
 	);
     return abs(2 * atan(tan05Ω));
+end
+
+
+"""
+	areCoplanar(p, a, b, c)::Bool
+Determine if `p` belogns to the plane determined by `a`, `b` and `c`.
+
+Namely it evluates the normal of the plane defined by `pa` and `pb` and checks
+if it is normal to the `pc` vector.
+"""
+function areCoplanar(
+		p::Array{Float64,1},
+		a::Array{Float64,1},
+		b::Array{Float64,1},
+		c::Array{Float64,1}
+	)::Bool
+	return Lar.dot(p.-a, Lar.cross(p.-b, p.-c)) == 0;
+end
+
+
+"""
+	pointInPolyhedron2D(
+		p::Array{Float64,1},
+		V::Lar.Points,
+		EV::Lar.Cells
+	)::Int64
+Evaluate if `p` belongs to the 2D complex defined by `[V, EV]`.
+
+This method computes if a given point `p` is inner, outer or edger with respect
+to the complex defined by the sets `V, EV`. Respectivelly it return
+the integer value `+1`, `-1` or `0`.
+
+_Note._ If something weired happens then `-3` is returned and the value for the
+inner angle related to `p` is shown.
+"""
+function pointInPolyhedron2D(
+		p::Array{Float64,1},
+		V::Lar.Points,
+		EV::Lar.Cells;
+		CHECKS=true
+	)::Int64
+
+	ω = 0.0;
+
+	if CHECKS
+		@assert size(V, 1) == 2
+			"ERROR: V expect to have 2 coordinates but $size(V, 2) where found";
+		for i = 1 : size(V, 2)
+			@assert length([e for e in EV if i ∈ e]) % 2 == 0
+				"ERROR: each point must have an even number of incident edges.";
+		end
+	end
+
+	Vvec = V .- p;
+
+	for e in EV
+		α = rot2Dangle(Vvec[:, e[1]], Vvec[:, e[2]]);
+		@show α
+		if α < 1
+			ω = ω + α;
+		elseif α > 1
+			ω = ω + α - 2.;
+		else
+			return 0;
+		end
+	end
+
+	if     isapprox(ω, 2.0; atol=1e-1) return +1;
+	elseif isapprox(ω, 0.0; atol=1e-1) return -1; end
+	@show ω;
+	return -3;
+end
+
+"""
+	rot2Dangle(x::Array{Float64,1}, y::Array{Float64,1})::Float64
+Evaluates the anticlockwise rotation angle between the two points `x` and `y`.
+"""
+function rot2Dangle(x::Array{Float64,1}, y::Array{Float64,1})::Float64
+	return (rot2Dangle(y) - rot2Dangle(x) + 2) % 2;
+end
+
+"""
+	rot2Dangle(x::Array{Float64,1})::Float64
+Evaluates the anticlockwise rotation angle of `x` by the positive `x`-axis.
+"""
+function rot2Dangle(x::Array{Float64,1})::Float64
+	abs_α = acos(Lar.dot(x, [1.;0.])/(Lar.norm(x) * Lar.norm([1.;0.]))) / π;
+	is_negative = x[2]<0;
+	return (-1)^is_negative * abs_α + is_negative * 2;
 end
