@@ -224,7 +224,7 @@ end
     @test pointInPolyhedron2D([0.5;  0.5], V, EV) == +1;
     @test pointInPolyhedron2D([0.1;  0.1], V, EV) == +1;
     @test pointInPolyhedron2D([0.1;  0.9], V, EV) == +1;
-    @test pointInPolyhedron2D([0.5; 1e-8], V, EV) == +1;
+    @test pointInPolyhedron2D([0.5; 1e-7], V, EV) == +1;
 
     @test pointInPolyhedron2D([0.5;  1.5], V, EV) == -1;
     @test pointInPolyhedron2D([1.0;  1.5], V, EV) == -1;
@@ -235,5 +235,30 @@ end
     @test pointInPolyhedron2D([1.0;  1.0], V, EV) ==  0;
     @test pointInPolyhedron2D([0.5; 1e-9], V, EV) ==  0;
     @test pointInPolyhedron2D([0.5;-1e-9], V, EV) ==  0;
+end
 
+@testset "Point in a Octagon" begin
+    V = [
+        +1.0 +0.6  0.0 -0.6 -1.0 -0.6  0.0 +0.6;
+         0.0 +0.6 +1.0 +0.6  0.0 -0.6 -1.0 -0.6
+    ];
+    EV = [
+        [1, 2], [2, 3], [3, 4], [4, 5],
+        [5, 6], [6, 7], [7, 8], [8, 1]
+    ];
+
+    @test pointInPolyhedron2D([0.5;     0.5], V, EV) == +1;
+    @test pointInPolyhedron2D([0.1;     0.1], V, EV) == +1;
+    @test pointInPolyhedron2D([0.0;     0.9], V, EV) == +1;
+    @test pointInPolyhedron2D([0.0; 1-1e-16], V, EV) == +1;
+
+    @test pointInPolyhedron2D([0.5;     1.5], V, EV) == -1;
+    @test pointInPolyhedron2D([1.0;     1.5], V, EV) == -1;
+    @test pointInPolyhedron2D([1.0;  -1e-23], V, EV) == -1;
+    @test pointInPolyhedron2D([1.4;    -0.6], V, EV) == -1;
+
+    @test pointInPolyhedron2D([0.6;     0.6], V, EV) ==  0;
+    @test pointInPolyhedron2D([1.0;     0.0], V, EV) ==  0;
+    @test pointInPolyhedron2D([0.0; 1-1e-17], V, EV) ==  0;
+    @test pointInPolyhedron2D([0.8;     0.3], V, EV) ==  0;
 end

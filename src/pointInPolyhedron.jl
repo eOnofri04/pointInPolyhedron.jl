@@ -223,16 +223,20 @@ function pointInPolyhedron2D(
 		end
 	end
 
+	if |([isequal(V[:, i], p) for i = 1 : size(V, 2)]...)
+		return 0;
+	end
+
 	Vvec = V .- p;
 
 	for e in EV
 		α = rot2Dangle(Vvec[:, e[1]], Vvec[:, e[2]]) / π;
-		if α < 1
-			ω = ω + α;
-		elseif α > 1
-			ω = ω + α - 2.;
-		else
+		if isapprox(α, 1.0)
 			return 0;
+		elseif α < 1
+			ω = ω + α;
+		else
+			ω = ω + α - 2.;
 		end
 	end
 
@@ -303,6 +307,11 @@ julia> rot2Dangle([1.; -1.], degree = true)
 ```
 """
 function rot2Dangle(x::Array{Float64,1}; degree = false)::Float64
+
+	if isequal(x, [0.;0.])
+		println("Cannot evaluate the angle for (0,0)");
+		return NaN;
+	end
 
 	abs_α = acos(Lar.dot(x, [1.;0.])/(Lar.norm(x) * Lar.norm([1.;0.])));
 	is_negative = x[2]<0;
