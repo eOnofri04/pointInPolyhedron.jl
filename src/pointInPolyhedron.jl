@@ -55,7 +55,10 @@ function pointInPolyhedron3D(
 			# ... If for some face ...
 			face_ref = ∪(face_complex...);
 			for Σ in face_complex
-				position = pointInPolyhedron2D(p, V[:, Σ])
+				points = projectTo2D([Σ p], Σ);
+				position = pointInPolyhedron2D(
+					points[:, 1],   points[:, [2 3 4]],   [[1 2], [2 3], [3 1]]
+				);
 				# ... the point is inner with respect to that face
 				#     than it is inner to the polyhedron;
 				if position == 1
@@ -320,4 +323,34 @@ function rot2Dangle(x::Array{Float64,1}; degree = false)::Float64
 		return α / π * 180;
 	end
 	return α;
+end
+
+
+"""
+	projectTo2D(V::Lar.Points, Σ::Lar.Points)::Lar.Points
+
+Projects the points `V` over the plane defined by `Σ`
+"""
+function projectTo2D(V::Lar.Points, Σ::Lar.Points; CHECKS = true)::Lar.Points
+
+	dim, m = size(V);
+
+	if CHECKS
+		@assert dim == 3 "ERROR: points are not 3D.";
+		@assert isequal(size(Σ), (3, 3)) "ERROR: Σ not well defined.";
+	end
+
+	O = Σ[:, 1];
+	xaxis = Σ[:, 2] .- O;
+	yaxis = Σ[:, 3] .- O;
+	n = Lar.cross(xaxis, yaxis);
+	xaxis = xaxis ./ sqrt(sum(xaxis.^2));
+	yaxis = Lar.cross(xaxis, n);
+	yaxis = yaxis ./ sqrt(sum(yaxis.^2));
+
+	#pr = [[Lar.dot(V[:, i], xaxis); Lar.dot(V[:, i], yaxis)] for i in 1 : 4];
+	xcord = [Lar.dot(V[:, i], xaxis) for i in 1 : m];
+	ycord = [Lar.dot(V[:, i], yaxis) for i in 1 : m];
+
+	return [xcord ycord]';
 end
